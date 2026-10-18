@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אופק בריאות | מערכת אימות וניהול תביעות חכמה</title>
+
+  <!-- Favicon / Tab Icon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230284c7'><path d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 6h2v4h4v2h-4v4h-2v-4H7v-2h4V7z'/></svg>">
+
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="app.css?v=7">
+</head>
+
+<body>
+
+  <!-- Top Global Header & Role Selector -->
+  <header class="header-bar">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="logo-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-text">
+          <h1>אופק בריאות • Ofek Health</h1>
+          <p>מערכת אימות וניהול תביעות בריאות</p>
+        </div>
+      </div>
+
+      <!-- Navigation Role Switcher (Compact & Modern) -->
+      <div class="role-tabs" role="tablist">
+        <button class="role-tab-btn active" data-view="customer-view" role="tab" aria-selected="true"
+          title="מעבר לפורטל מבוטח">
+          <i class="fa-solid fa-user"></i>
+          <span>מבוטח</span>
+        </button>
+        <button class="role-tab-btn" data-view="handler-view" role="tab" aria-selected="false"
+          title="מעבר לתור רפרנט תביעות">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>רפרנט</span>
+          <span class="badge badge-warning" id="handlerQueueCount">3</span>
+        </button>
+        <button class="role-tab-btn" data-view="manager-view" role="tab" aria-selected="false"
+          title="מעבר לניהול עומסי מחלקה">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>מנהל מחלקה</span>
+        </button>
+        <button class="role-tab-btn" data-view="exec-view" role="tab" aria-selected="false"
+          title="מעבר לדשבורד הנהלה ראשית">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>הנהלה</span>
+        </button>
+      </div>
+
+      <!-- Three-Dots More Options Menu (Clean, Minimalist Screen) -->
+      <div class="header-actions-wrapper">
+        <button class="btn-more-menu" id="btnHeaderMenu" title="אפשרויות, תרחישי הדגמה ואיפוס"
+          aria-label="אפשרויות נוספות">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+
+        <div class="header-dropdown-menu" id="headerDropdownMenu">
+          <div class="dropdown-section-title">⚡ חסימות אימות מקדים (Pre-Validation Blocks)</div>
+          <button class="dropdown-item-btn" data-scenario-id="duplicate_claim"
+            onclick="App.loadScenario('duplicate_claim'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-clone text-danger"></i>
+            <span>1. חסימת תביעה כפולה (Duplicate Block)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="uncovered_treatment"
+            onclick="App.loadScenario('uncovered_treatment'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-ban text-danger"></i>
+            <span>2. שירות אינו מכוסה בפוליסה (Uncovered)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="waiting_period"
+            onclick="App.loadScenario('waiting_period'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-hourglass-start text-danger"></i>
+            <span>3. טיפול בתקופת אכשרה (Waiting Period)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="coverage_added_later"
+            onclick="App.loadScenario('coverage_added_later'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-calendar-plus text-danger"></i>
+            <span>4. כיסוי נוסף לאחר הטיפול (Added Later)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="coverage_cancelled_early"
+            onclick="App.loadScenario('coverage_cancelled_early'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-calendar-xmark text-danger"></i>
+            <span>5. כיסוי בוטל לפני הטיפול (Cancelled Early)</span>
+          </button>
+
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-section-title">📄 אימות מסמכים ואיכות סריקה (Document OCR)</div>
+          <button class="dropdown-item-btn" data-scenario-id="unreadable_doc"
+            onclick="App.loadScenario('unreadable_doc'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-file-circle-xmark text-danger"></i>
+            <span>6. דחיית מסמך לא קריא (OCR &lt; 50%)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="low_confidence_doc"
+            onclick="App.loadScenario('low_confidence_doc'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-file-circle-exclamation text-warning"></i>
+            <span>7. מסמך באיכות נמוכה (OCR 50-85%)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="mismatched_amount"
+            onclick="App.loadScenario('mismatched_amount'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-scale-unbalanced text-warning"></i>
+            <span>8. אי-התאמה בסכום (Soft Variance)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="missing_mandatory_doc"
+            onclick="App.loadScenario('missing_mandatory_doc'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-file-circle-question text-warning"></i>
+            <span>9. מסמך חובה חסר (Missing Info)</span>
+          </button>
+
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-section-title">🚀 תביעה נקייה ואוטומציה</div>
+          <button class="dropdown-item-btn" data-scenario-id="clean_fast_track"
+            onclick="App.loadScenario('clean_fast_track'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-bolt text-success"></i>
+            <span>10. תביעה נקייה 100% (Fast-Track)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="high_amount_warning"
+            onclick="App.loadScenario('high_amount_warning'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+            <span>11. אזהרת סכום חריג (High Amount)</span>
+          </button>
+          <button class="dropdown-item-btn" data-scenario-id="guardian_claim"
+            onclick="App.loadScenario('guardian_claim'); App.closeHeaderMenu();">
+            <i class="fa-solid fa-scale-balanced text-primary"></i>
+            <span>12. תביעת אפוטרופוס מאושרת (לבדיקת רפרנט)</span>
+          </button>
+
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-section-title">⚙️ פעולות מערכת</div>
+          <button class="dropdown-item-btn" id="btnResetData" style="color: var(--danger);"
+            onclick="App.confirmAndReset(); App.closeHeaderMenu();">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>איפוס מלא של כל הנתונים והטיוטות</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Content -->
+  <main class="main-wrapper">
+
+    <!-- =========================================================================
+         VIEW 1: INSURED CUSTOMER PORTAL & WIZARD (Data-First & Companion OCR)
+         ========================================================================= -->
+    <section id="customer-view" class="view-section active">
+
+      <!-- STATE A: Customer Personal Dashboard (Default View - Question 3) -->
+      <div id="customerDashboardPanel">
+        <!-- Customer Info & Action Hero Card -->
+        <div class="card"
+          style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-right: 5px solid var(--primary); margin-bottom: 2.5rem;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <div class="card-title" style="font-size: 1.35rem; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-circle-user text-primary"></i>
+                שלום, <span id="customerDisplayGreeting">ישראל ישראלי</span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+                ברוכים הבאים לפורטל האישי לניהול זכאויות והגשת תביעות חכמה באופק בריאות.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                <i class="fa-solid fa-shield-halved"></i> פוליסה: <strong id="customerDisplayPolicy">אופק פרימיום
+                  מורחב</strong>
+              </span>
+              <button class="btn btn-secondary" id="btnCustomerGuardianship"
+                style="font-size: 0.92rem; padding: 0.65rem 1.15rem; border: 1px solid #cbd5e1; background: #ffffff; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-sm);"
+                onclick="App.openGuardianshipModal()">
+                <i class="fa-solid fa-scale-balanced text-primary"></i>
+                <span id="btnCustomerGuardianshipText">הגדרת אפוטרופסות / ייפוי כוח</span>
+                <span id="badgeCustomerGuardianshipStatus" class="badge badge-neutral" style="font-size: 0.74rem;">לא
+                  הוגדר</span>
+              </button>
+              <button class="btn btn-primary"
+                style="font-size: 1rem; padding: 0.65rem 1.4rem; box-shadow: var(--shadow-md);"
+                onclick="App.openNewClaimWizard()">
+                <i class="fa-solid fa-plus-circle"></i> הגשת תביעה חדשה להחזר כספי
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Policy Snapshot Badges -->
+          <div
+            style="display: flex; gap: 0.6rem; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 0.85rem; font-size: 0.82rem; color: var(--text-secondary);">
+            <span><i class="fa-solid fa-check-circle text-success"></i> תקופת אכשרה: <strong>הסתיימה
+                מלאה</strong></span>
+            <span>•</span>
+            <span><i class="fa-solid fa-check-circle text-success"></i> כיסויים פעילים: <strong>ניתוחים, תרופות 29ג,
+                דימות, שיניים וייעוץ</strong></span>
+            <span>•</span>
+            <span><i class="fa-solid fa-bolt text-warning"></i> מסלול אימות: <strong>Pre-Validation AI
+                מהיר</strong></span>
+          </div>
+        </div>
+
+        <!-- Customer Dashboard Tabs: Recent Claims vs Guardianships (Requirement 3) -->
+        <div class="customer-dashboard-tabs"
+          style="display: flex; gap: 0.6rem; margin-bottom: 0.85rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.25rem;">
+          <button type="button" class="dashboard-tab-btn active" id="tabBtnCustomerClaims"
+            onclick="App.switchCustomerDashboardTab('claims')"
+            style="background: none; border: none; padding: 0.65rem 1.35rem; font-size: 1.02rem; font-weight: 700; color: var(--primary); border-bottom: 3px solid var(--primary); cursor: pointer; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>תביעות אחרונות</span>
+            <span id="customerClaimsTabBadge" class="badge badge-primary" style="font-size: 0.78rem;">5</span>
+          </button>
+          <button type="button" class="dashboard-tab-btn" id="tabBtnCustomerGuardianships"
+            onclick="App.switchCustomerDashboardTab('guardianships')"
+            style="background: none; border: none; padding: 0.65rem 1.35rem; font-size: 1.02rem; font-weight: 600; color: var(--text-secondary); border-bottom: 3px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s;">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <span>אישורי אפוטרופסות ומיוצגים</span>
+            <span id="customerGuardianshipsTabBadge" class="badge badge-neutral" style="font-size: 0.78rem;">0</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 1: Customer Existing Claims Tracking (Collapsible Dropdown, Closed by default) -->
+        <div id="tabContentCustomerClaims">
+          <div class="collapsible-card" id="cardCustomerClaimsCollapsible">
+            <div class="collapsible-header" onclick="App.toggleCollapsible('cardCustomerClaimsCollapsible')"
+              style="display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 1.4rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-clock-rotate-left text-primary" style="font-size: 1.1rem;"></i>
+                <div>
+                  <span style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary);">
+                    תביעות אחרונות
+                  </span>
+                  <span id="customerClaimsSubText"
+                    style="font-size: 0.82rem; color: var(--text-secondary); margin-right: 0.5rem;">
+                    (סך הכל 5 תביעות)
+                  </span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <span id="customerClaimsWaitingBadge" class="badge badge-warning"
+                  style="font-size: 0.82rem; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);">
+                  <i class="fa-solid fa-clock"></i>
+                  <span id="customerClaimsWaitingText">תביעה אחת מחכה לטיפולך</span>
+                </span>
+                <span style="font-size: 0.82rem; color: var(--text-muted);" id="customerClaimsToggleLabel">הצג פירוט
+                  תביעות</span>
+                <i class="fa-solid fa-chevron-down chevron-icon" style="font-size: 1rem;"></i>
+              </div>
+            </div>
+            <div class="collapsible-content" style="padding: 1.25rem;">
+              <div class="table-container">
+                <table class="custom-table" id="customerClaimsTable">
+                  <thead>
+                    <tr>
+                      <th>מספר תביעה</th>
+                      <th>סוג תביעה</th>
+                      <th>תאריך הגשה</th>
+                      <th>סכום נתבע</th>
+                      <th>סטטוס תביעה</th>
+                      <th>הודעות ופעולות נדרשות</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: Active Guardianship Approvals (Dedicated Management Tab) -->
+        <div id="tabContentCustomerGuardianships" style="display: none;">
+          <div class="card"
+            style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.85rem; padding: 1.15rem 1.4rem; background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-scale-balanced text-primary" style="font-size: 1.25rem;"></i>
+                <div>
+                  <div style="font-weight: 700; font-size: 1.08rem; color: var(--text-primary);">
+                    אישורי אפוטרופסות וייפוי כוח מתמשך
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-secondary);" id="customerGuardianshipsSubText">
+                    ניהול מיוצגים חוקיים וצפייה בצווי מינוי שיפוטיים מאושרים
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="App.openGuardianshipModal()"
+                style="font-size: 0.88rem; padding: 0.45rem 1.1rem; box-shadow: var(--shadow-sm);">
+                <i class="fa-solid fa-plus-circle"></i> העלאת אישור אפוטרופסות נוסף
+              </button>
+            </div>
+            <div style="padding: 1.25rem;">
+              <!-- Empty State if 0 Guardianships -->
+              <div id="customerGuardianshipsEmptyState"
+                style="display: none; text-align: center; padding: 2.2rem 1.5rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius-md);">
+                <i class="fa-solid fa-file-shield text-muted"
+                  style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #94a3b8;"></i>
+                <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text-primary);">
+                  טרם הוגדרו אישורי אפוטרופסות בחשבונך</h4>
+                <p
+                  style="font-size: 0.85rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto 1.1rem auto;">
+                  באפשרותך להעלות צו מינוי אפוטרופוס מבית המשפט לענייני משפחה או אישור הפקדת ייפוי כוח מתמשך. לאחר אימות
+                  הנתונים, תוכל/י להגיש תביעות עבור המיוצג/ת בקלות ובמהירות.
+                </p>
+                <button type="button" class="btn btn-primary" onclick="App.openGuardianshipModal()"
+                  style="font-size: 0.9rem;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> העלאת צו אפוטרופסות ראשון
+                </button>
+              </div>
+
+              <!-- Table Container -->
+              <div class="table-container" id="customerGuardianshipsTableContainer">
+                <table class="custom-table" id="customerGuardianshipsTable">
+                  <thead>
+                    <tr>
+                      <th>שם המיוצג/ת (חסוי/ת)</th>
+                      <th>מספר ת.ז.</th>
+                      <th>מספר תיק שיפוטי / אסמכתא</th>
+                      <th>תחום סמכויות והיקף</th>
+                      <th>תאריך אישור במערכת</th>
+                      <th>סטטוס רישום</th>
+                      <th>פעולות</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customerGuardianshipsTableBody">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE B: Focused 4-Step Claim Submission Wizard (Visible during active submission - Question 3) -->
+      <div id="customerWizardPanel" style="display: none;">
+
+        <!-- Breadcrumb / Back to Dashboard Bar -->
+        <div class="card" style="margin-bottom: 1rem; background: #f8fafc;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <button class="btn btn-secondary" onclick="App.closeWizardAndShowDashboard()">
+              <i class="fa-solid fa-arrow-right"></i> חזרה לאזור האישי ולרשימת התביעות
+            </button>
+            <div style="font-size: 0.84rem; color: var(--text-secondary);" id="draftSavedIndicator">
+              <i class="fa-solid fa-cloud-check text-success"></i> טיוטה נשמרת אוטומטית מקומית
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard Container -->
+        <div class="card" id="wizardContainer">
+
+          <!-- Step Navigation Bar -->
+          <div class="stepper-nav" id="wizardStepper">
+            <div class="stepper-item active" data-step="1">
+              <div class="stepper-circle">1</div>
+              <div class="stepper-label">זיהוי וסוג תביעה</div>
+            </div>
+            <div class="stepper-item" data-step="2">
+              <div class="stepper-circle">2</div>
+              <div class="stepper-label">פרטי הטיפול וההוצאה</div>
+            </div>
+            <div class="stepper-item" data-step="3">
+              <div class="stepper-circle">3</div>
+              <div class="stepper-label">צירוף מסמכים ואימות</div>
+            </div>
+            <div class="stepper-item" data-step="4">
+              <div class="stepper-circle">4</div>
+              <div class="stepper-label">מרכז בקרה וסיכום</div>
+            </div>
+          </div>
+
+          <!-- STEP 1: Upfront Routing & Zero-Clutter Claim Type -->
+          <div class="wizard-step-content" id="stepContent1">
+            <!-- Quick Return to Step 4 Banner (When editing beneficiary to 'other') -->
+            <div id="step1ReturnToStep4Banner"
+              style="display: none; background: #eff6ff; border: 1px solid #7dd3fc; border-radius: var(--radius-md); padding: 0.85rem 1.15rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-user-pen text-primary" style="font-size: 1.35rem;"></i>
+                <div>
+                  <strong style="color: var(--primary-dark); font-size: 0.95rem; display: block;">
+                    עריכת שם פרטי ומשפחה עבור בן/בת משפחה (אחר)
+                  </strong>
+                  <span style="font-size: 0.82rem; color: #0369a1;">
+                    הגעת מעריכת פרטים בשלב 4 (סיכום ובקרה). עדכן את הפרטים, ולחץ על הכפתור כדי לחזור ישירות לסיכום ללא
+                    מעבר חוזר בין השלבים.
+                  </span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" id="btnQuickReturnToStep4"
+                onclick="App.saveDependentAndReturnToStep4()"
+                style="white-space: nowrap; font-size: 0.9rem; padding: 0.55rem 1.15rem; box-shadow: var(--shadow-md);">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>שמור וחזור מיד לשלב 4</span>
+              </button>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; font-weight: 700;">שלב 1 מתוך 4: עבור מי מוגשת התביעה?</h3>
+
+            <!-- Upfront Routing (עבורי / עבור אחרים) -->
+            <div class="routing-container" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+              <label class="routing-card selected" id="routeSelfCard" onclick="App.selectBeneficiary('self')">
+                <input type="radio" name="claimBeneficiary" value="self" checked class="routing-radio">
+                <div>
+                  <strong style="display: block; font-size: 1rem;">עבורי (בעל/ת הפוליסה)</strong>
+                  <span style="font-size: 0.82rem; color: var(--text-secondary);">ישראל ישראלי • ת.ז. 028475913</span>
+                </div>
+              </label>
+
+              <label class="routing-card" id="routeDependentCard" onclick="App.selectBeneficiary('dependent')">
+                <input type="radio" name="claimBeneficiary" value="dependent" class="routing-radio">
+                <div>
+                  <strong style="display: block; font-size: 1rem;">עבור אחרים</strong>
+                  <span style="font-size: 0.82rem; color: var(--text-secondary);">הגשה עבור בן/בת משפחה, תלוי/ה בפוליסה
+                    או מיוצג/ת</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Dynamic Dependent / Others Expansion (Accordion if selected) -->
+            <div id="dependentFieldsSection"
+              style="display: none; background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+              <h4
+                style="font-size: 0.95rem; margin-bottom: 0.85rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fa-solid fa-users"></i> פרטי המטופל/ת (עבור אחרים):
+              </h4>
+              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+                <!-- 1. RELATION / CONTEXT FIRST IN ROW -->
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700; color: var(--text-primary);">הקשר / זיקה לפוליסה
+                    *</label>
+                  <select class="form-select" id="depRelation" onchange="App.handleRelationChange(this.value)">
+                    <option value="child">ילד/ה (עד גיל 21)</option>
+                    <option value="spouse">בן/בת זוג</option>
+                    <option value="parent">הורה מבוטח</option>
+                    <!-- שורת אפוטרופוס תתווסף כאן רק אם כבר קיבל אישור אפוטרופסות -->
+                  </select>
+                  <span class="form-hint" id="relationHint">סוג הקשר המשפחתי/המשפטי</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">שם מלא של המטופל/ת *</label>
+                  <input type="text" class="form-input" id="depName" placeholder="שם פרטי ומשפחה" required>
+                  <span class="form-hint">שם פרטי ושם משפחה</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">מספר תעודת זהות (9 ספרות) *</label>
+                  <input type="text" class="form-input input-num-ergonomic" id="depId" placeholder="9 ספרות"
+                    maxlength="9" inputmode="numeric" required>
+                  <span class="form-hint">מספר ת.ז. ישראלי תקין</span>
+                </div>
+                <div class="form-group" id="depBirthDateGroup">
+                  <label class="form-label">תאריך לידה (DD/MM/YYYY) *</label>
+                  <input type="text" class="form-input input-num-ergonomic" id="depBirthDate" placeholder="DD/MM/YYYY"
+                    maxlength="10" inputmode="numeric" required>
+                  <span class="form-hint">פורמט: יום/חודש/שנה</span>
+                </div>
+              </div>
+
+              <!-- Ward Selection Picker (Displayed ONLY when relation === 'guardian' and there are MULTIPLE approved guardianships) -->
+              <div id="guardianMultiWardPicker"
+                style="display: none; background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius-sm); padding: 0.9rem 1.1rem; margin-top: 0.85rem;">
+                <label class="form-label"
+                  style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.4rem;">
+                  <i class="fa-solid fa-users-viewfinder"></i> קיימים מספר אישורי אפוטרופסות מאושרים — בחר/י מיוצג/ת: *
+                </label>
+                <select class="form-select" id="selectGuardianWard" onchange="App.handleGuardianWardSelect(this.value)"
+                  style="border-color: #86efac;">
+                  <!-- Populated dynamically via JS -->
+                </select>
+                <span class="form-hint" style="color: #15803d; margin-top: 0.35rem; display: block;">
+                  💡 בחירת המיוצג/ת תמלא אוטומטית את שמו, מספר תעודת הזהות ותאריך הלידה.
+                </span>
+              </div>
+
+              <!-- Active Guardian Notice inside Others (Shown ONLY if relation === 'guardian') -->
+              <div id="guardianActiveRelationNotice"
+                style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-top: 0.85rem;">
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div
+                    style="display: flex; align-items: center; gap: 0.5rem; color: #1e40af; font-size: 0.88rem; font-weight: 700;">
+                    <i class="fa-solid fa-scale-balanced"></i> הגשה כדין בתור אפוטרופוס / מיופה כוח מוסמך
+                  </div>
+                </div>
+                <div
+                  style="font-size: 0.82rem; color: #1e3a8a; margin-top: 0.35rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                  <span>תיק שיפוטי: <strong id="noticeCourtCase">א"פ 42918-03-24</strong></span>
+                  <span>סמכות: <strong>עניינים רפואיים, ביטוחיים ואישיים</strong></span>
+                  <span>מסמך מקור: <strong id="noticeDocName">צו_מינוי_אפוטרופוס_בימש_משפחה_חתום.pdf</strong></span>
+                  <button type="button" class="btn btn-secondary"
+                    style="font-size: 0.74rem; padding: 0.15rem 0.5rem; background: #ffffff; margin-right: auto;"
+                    onclick="App.openGuardianshipProofModal()">
+                    <i class="fa-solid fa-eye"></i> צפייה בצו המאושר
+                  </button>
+                </div>
+              </div>
+            </div>
+
+
+            <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 700;">בחר את סוג התביעה:</h3>
+            <div class="category-grid" id="claimCategoryGrid">
+              <!-- Populated via JavaScript from MOCK_DATA.claimCategories -->
+            </div>
+          </div>
+
+          <!-- STEP 2: Data-First Treatment Details (Date & Amount Only) -->
+          <div class="wizard-step-content" id="stepContent2" style="display: none;">
+            <div style="max-width: 680px; margin: 0 auto;">
+              <h3 style="margin-bottom: 0.4rem; font-weight: 700;">שלב 2 מתוך 4: פרטי הטיפול וההוצאה</h3>
+              <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                הזן את תאריך הטיפול וסכום התביעה המבוקש. שאר הפרטים (שם הרופא/ה ובית החולים) יחולצו ויאומתו אוטומטית
+                מתוך המסמכים בשלב הבא.
+              </p>
+
+              <div class="card"
+                style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+
+                  <!-- Service Date Input -->
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-weight: 600;">
+                      <i class="fa-solid fa-calendar-day text-primary"></i>
+                      תאריך ביצוע הטיפול / השירות *
+                    </label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                      <input type="text" class="form-input input-num-ergonomic" id="wizardServiceDate"
+                        placeholder="DD/MM/YYYY (לדוגמה: 28/09/2026)" maxlength="10" inputmode="numeric"
+                        style="width: 100%; padding-left: 2.8rem; letter-spacing: 0.5px; font-weight: 500;" required>
+                      <button type="button" id="btnOpenCalendarPicker" title="בחר תאריך מלוח השנה"
+                        style="position: absolute; left: 8px; background: transparent; border: none; color: var(--primary); cursor: pointer; font-size: 1.15rem; padding: 4px; display: flex; align-items: center;">
+                        <i class="fa-solid fa-calendar-days"></i>
+                      </button>
+                      <input type="date" id="nativeHiddenDatePicker"
+                        style="position: absolute; left: 8px; width: 28px; height: 28px; opacity: 0; pointer-events: none;">
+                    </div>
+                    <span class="form-hint">פורמט ישראלי: יום/חודש/שנה (הקלד או בחר מהיומן)</span>
+                  </div>
+
+                  <!-- Claim Amount Input -->
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-weight: 600;">
+                      <i class="fa-solid fa-shekel-sign text-primary"></i>
+                      סכום ההוצאה לתביעה (בש"ח) *
+                    </label>
+                    <input type="number" class="form-input input-num-ergonomic" id="wizardClaimAmount"
+                      placeholder="0.00" inputmode="decimal" required>
+                    <span class="form-hint">סכום התשלום שבוצע בפועל מול הקבלה/חשבונית</span>
+                  </div>
+
+                </div>
+
+                <!-- Intelligent Auto-Extraction Notice Banner -->
+                <div
+                  style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-top: 1.25rem; display: flex; align-items: flex-start; gap: 0.65rem;">
+                  <i class="fa-solid fa-wand-magic-sparkles text-primary"
+                    style="font-size: 1.25rem; margin-top: 0.15rem;"></i>
+                  <div>
+                    <strong style="color: var(--primary-dark); font-size: 0.88rem; display: block;">אימות אוטומטי מול
+                      רשימת ההסדר:</strong>
+                    <p style="font-size: 0.82rem; color: #1e3a8a; margin: 0.2rem 0 0 0; line-height: 1.4;">
+                      אין צורך להקליד ידנית את שם בית החולים או הרופא. מנוע ה-AI יסרוק אותם מתוך המסמכים בשלב הבא ויאמת
+                      אוטומטית את היותם <strong>רופא ומוסד רפואי שבהסדר</strong>.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: Companion Document Upload & Real-Time OCR Validation -->
+          <div class="wizard-step-content" id="stepContent3" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <h3 style="font-weight: 700;">שלב 3 מתוך 4: צירוף מסמכים ואימות OCR נלווה</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                  המסמכים הנדרשים הותאמו אישית לסוג התביעה שבחרת. מנוע ה-AI יסרוק אותם מיד לחסכון בהקלדה כפולה.
+                </p>
+              </div>
+              <button class="btn btn-secondary" id="btnSimulateFastUpload">
+                <i class="fa-solid fa-wand-magic-sparkles text-primary"></i>
+                העלאה וסריקה אוטומטית (דמו)
+              </button>
+            </div>
+
+            <!-- Dynamic Required Documents Grid based on Claim Category -->
+            <div class="doc-upload-grid" id="requiredDocsContainer">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- STEP 4: Review Orchestration Hub (UX Rule #7) -->
+          <div class="wizard-step-content" id="stepContent4" style="display: none;">
+            <h3 style="margin-bottom: 0.5rem; font-weight: 700;">שלב 4 מתוך 4: מרכז בקרה ואישור סופי (Review Hub)</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+              בדוק את פרטי התביעה טרם שליחתה לרפרנט. אם קיימים חוסרים, ניתן לתקנם ישירות בלחיצה על כפתורי המעבר המהיר.
+            </p>
+
+            <!-- Aggregated Blockers Hub (Banners if any missing or mismatched items) -->
+            <div class="blockers-hub" id="reviewBlockersBanner" style="display: none;">
+              <div class="blockers-header">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem;"></i>
+                <span>זוהו חוסרים או אי-התאמות הדורשים את תשומת ליבך לפני השליחה:</span>
+              </div>
+              <div class="blocker-items-list" id="blockerItemsContainer">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Section Cards with In-Place Editing (On the spot & Audited) -->
+            <div class="review-sections-grid">
+              <!-- CARD 1: Beneficiary & Claim Category -->
+              <div class="review-section-card" id="cardRevBeneficiary">
+                <div class="review-section-header">
+                  <strong><i class="fa-solid fa-user-tag text-primary"></i> פרטי המבוטח והתביעה</strong>
+                </div>
+
+                <!-- Beneficiary Row -->
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                  <div>
+                    <strong>מבוטח:</strong> <span id="revBeneficiary">ישראל ישראלי</span>
+                    <span id="revBeneficiaryChangeBadge" class="badge badge-warning"
+                      style="display: none; font-size: 0.72rem; margin-right: 0.35rem;">שונה ל'אחר'</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.startEditBeneficiaryToOther()"
+                    title="עריכת מבוטח (שינוי שם/אחר בשלב 1 וחזרה מהירה לשלב 4)"
+                    style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-user-pen"></i> עריכת שם/אחר
+                  </button>
+                </div>
+
+                <!-- Category Row -->
+                <div id="revCategoryDisplayRow"
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                  <div>
+                    <strong>סוג תביעה:</strong> <span id="revCategory">ניתוח ואשפוז בארץ</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.toggleStep4CategoryEdit()"
+                    title="עריכת סוג תביעה בלבד" style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-pen"></i> עריכת סוג
+                  </button>
+                </div>
+
+                <!-- Category Inline Edit Box -->
+                <div id="revCategoryEditRow"
+                  style="display: none; margin-bottom: 0.65rem; background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">בחר סוג
+                    תביעה חדש:</label>
+                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <select class="form-select" id="revCategorySelect"
+                      style="font-size: 0.84rem; padding: 0.35rem 0.6rem; flex: 1;">
+                      <!-- Populated dynamically via JS -->
+                    </select>
+                    <button type="button" class="btn btn-primary"
+                      onclick="App.saveStep4CategoryChange(document.getElementById('revCategorySelect').value)"
+                      style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-check"></i> שמור
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="App.toggleStep4CategoryEdit(false)"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Policy Row (Readonly - Locked as agreed) -->
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin: 0; gap: 0.5rem;">
+                  <div>
+                    <strong>פוליסה:</strong> <span>אופק פרימיום מורחב</span>
+                  </div>
+                  <span class="badge"
+                    style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; font-weight: normal;"
+                    title="נתון מערכתי קבוע מתוך חוזה הביטוח - אינו ניתן לעריכה">
+                    <i class="fa-solid fa-lock" style="font-size: 0.68rem;"></i> קבוע בפוליסה
+                  </span>
+                </div>
+              </div>
+
+              <!-- CARD 2: Treatment Details & Claim Amount (Individual In-Place Edit with OCR Discrepancy Check) -->
+              <div class="review-section-card" id="cardRevTreatment">
+                <div class="review-section-header">
+                  <strong><i class="fa-solid fa-file-invoice-dollar text-primary"></i> פרטי טיפול וסכום</strong>
+                </div>
+
+                <!-- 1. Treatment Date Row -->
+                <div id="rowDisplay_serviceDate"
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                  <div>
+                    <strong>תאריך טיפול:</strong> <span id="revServiceDate">28/09/2026</span>
+                    <span id="revDateChangedBadge" class="badge badge-warning"
+                      style="display: none; font-size: 0.72rem; margin-right: 0.35rem;">נערך</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.startEditSingleField('serviceDate')"
+                    title="עריכת תאריך טיפול בלבד" style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-pen"></i> עריכה
+                  </button>
+                </div>
+                <div id="rowEdit_serviceDate"
+                  style="display: none; margin-bottom: 0.65rem; background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">עריכת
+                    תאריך טיפול (DD/MM/YYYY):</label>
+                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <input type="text" class="form-input input-num-ergonomic" id="singleEdit_serviceDate"
+                      placeholder="DD/MM/YYYY" maxlength="10"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.85rem; flex: 1;">
+                    <button type="button" class="btn btn-primary" onclick="App.saveSingleField('serviceDate')"
+                      style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-check"></i> שמור
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="App.cancelEditSingleField('serviceDate')"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    תאריך שפוענח בסריקה (OCR): <strong id="hintOcr_serviceDate"
+                      style="color: var(--primary-dark);">28/09/2026</strong>
+                  </div>
+                </div>
+
+                <!-- 2. Claim Amount Row -->
+                <div id="rowDisplay_claimAmount"
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                  <div>
+                    <strong>סכום נתבע:</strong> <span id="revAmount" style="font-weight: 700;">₪1,200</span>
+                    <span id="revAmountDeltaBadge" class="badge badge-warning"
+                      style="display: none; font-size: 0.72rem; margin-right: 0.35rem;">שונה מסריקת OCR</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.startEditSingleField('claimAmount')"
+                    title="עריכת סכום נתבע בלבד" style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-pen"></i> עריכה
+                  </button>
+                </div>
+                <div id="rowEdit_claimAmount"
+                  style="display: none; margin-bottom: 0.65rem; background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">עריכת
+                    סכום נתבע (₪):</label>
+                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <input type="number" class="form-input input-num-ergonomic" id="singleEdit_claimAmount"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.85rem; flex: 1; font-weight: 700;"
+                      inputmode="decimal">
+                    <button type="button" class="btn btn-primary" onclick="App.saveSingleField('claimAmount')"
+                      style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-check"></i> שמור
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="App.cancelEditSingleField('claimAmount')"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    סכום שפוענח בסריקה (OCR): <strong id="hintOcr_claimAmount"
+                      style="color: var(--primary-dark);">₪1,200</strong>
+                  </div>
+                </div>
+
+                <!-- 3. Provider Row -->
+                <div id="rowDisplay_providerName"
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                  <div>
+                    <strong>ספק / מוסד רפואי:</strong> <span id="revProviderOnly">אסותא רמת החייל - תל אביב</span>
+                    <span id="revProviderChangedBadge" class="badge badge-warning"
+                      style="display: none; font-size: 0.72rem; margin-right: 0.35rem;">נערך</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.startEditSingleField('providerName')"
+                    title="עריכת ספק / מוסד רפואי בלבד" style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-pen"></i> עריכה
+                  </button>
+                </div>
+                <div id="rowEdit_providerName"
+                  style="display: none; margin-bottom: 0.65rem; background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">עריכת
+                    ספק / מוסד רפואי:</label>
+                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <input type="text" class="form-input" id="singleEdit_providerName"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.85rem; flex: 1;">
+                    <button type="button" class="btn btn-primary" onclick="App.saveSingleField('providerName')"
+                      style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-check"></i> שמור
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="App.cancelEditSingleField('providerName')"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 4. Doctor Row -->
+                <div id="rowDisplay_doctorName"
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; gap: 0.5rem;">
+                  <div>
+                    <strong>רופא מטפל:</strong> <span id="revDoctorOnly">פרופ' אהוד רז</span>
+                    <span id="revDoctorChangedBadge" class="badge badge-warning"
+                      style="display: none; font-size: 0.72rem; margin-right: 0.35rem;">נערך</span>
+                  </div>
+                  <button type="button" class="btn-link" onclick="App.startEditSingleField('doctorName')"
+                    title="עריכת רופא מטפל בלבד" style="font-size: 0.8rem; white-space: nowrap;">
+                    <i class="fa-solid fa-pen"></i> עריכה
+                  </button>
+                </div>
+                <div id="rowEdit_doctorName"
+                  style="display: none; margin-top: 0.45rem; background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">עריכת
+                    רופא מטפל:</label>
+                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <input type="text" class="form-input" id="singleEdit_doctorName"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.85rem; flex: 1;">
+                    <button type="button" class="btn btn-primary" onclick="App.saveSingleField('doctorName')"
+                      style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-check"></i> שמור
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="App.cancelEditSingleField('doctorName')"
+                      style="padding: 0.35rem 0.55rem; font-size: 0.78rem;">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Explanation Box Preview if Discrepancy Exists -->
+                <div id="revExplanationPreview"
+                  style="display: none; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: var(--radius-sm); padding: 0.55rem 0.8rem; margin-top: 0.75rem;">
+                  <div
+                    style="font-size: 0.78rem; font-weight: 700; color: #b45309; display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-comment-dots"></i> הסבר המבוטח שנמסר לאי-ההתאמה:
+                  </div>
+                  <p id="revExplanationText"
+                    style="font-size: 0.84rem; color: #1e293b; margin: 0.25rem 0 0 0; font-style: italic;"></p>
+                </div>
+              </div>
+
+              <!-- CARD 3: Attached Documents -->
+              <div class="review-section-card" id="cardRevDocs">
+                <div class="review-section-header">
+                  <strong><i class="fa-solid fa-paperclip text-primary"></i> מסמכים שצורפו</strong>
+                  <button type="button" class="btn-link" onclick="App.openCustomerUploadDocModal()"><i
+                      class="fa-solid fa-plus"></i> הוספת מסמך במקום</button>
+                </div>
+                <div id="revDocsList" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4 Live Audit Trail Card (Logs all on-the-spot changes made before submission) -->
+            <div class="collapsible-card" id="cardStep4AuditTrail" style="margin-top: 1.25rem;">
+              <div class="collapsible-header" onclick="App.toggleCollapsible('cardStep4AuditTrail')"
+                style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <i class="fa-solid fa-clipboard-list text-primary"></i>
+                  <span style="font-weight: 700; font-size: 0.92rem;">
+                    יומן מעקב ושינויים טרום-הגשה (Pre-Submission Audit)
+                  </span>
+                  <span class="badge badge-neutral" id="step4AuditCountBadge" style="font-size: 0.74rem;">0
+                    שינויים</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.78rem; color: var(--text-muted);">פירוט כל העריכות שבוצעו</span>
+                  <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                </div>
+              </div>
+              <div class="collapsible-content" style="padding: 1rem;">
+                <div id="step4AuditEntriesContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <span style="font-size: 0.84rem; color: var(--text-muted); font-style: italic;">טרם בוצעו עריכות בפרטי
+                    התביעה. כל שינוי על המקום יתועד כאן אוטומטית.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STICKY ACTION FOOTER (Predictive CTAs & No Dead-End Skip) -->
+          <footer class="sticky-wizard-footer">
+            <div class="footer-left">
+              <button class="btn btn-secondary" id="btnWizardPrev" style="display: none;">
+                <i class="fa-solid fa-arrow-right"></i>
+                חזרה
+              </button>
+              <button class="btn btn-link" id="btnWizardSkip" style="display: none;">
+                אין לי את המסמך כרגע – אשלים בהמשך
+              </button>
+            </div>
+
+            <div class="footer-right">
+              <span id="draftSavedIndicator" style="font-size: 0.78rem; color: var(--text-muted);">
+                <i class="fa-solid fa-cloud-check text-success"></i> טיוטה נשמרת אוטומטית
+              </span>
+              <button class="btn btn-primary" id="btnWizardNext">
+                <span>ממשיכים לפרטי הטיפול</span>
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+            </div>
+          </footer>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================================
+         VIEW 2: CLAIMS HANDLER WORKSPACE & SPLIT SCREEN (Human-In-The-Loop)
+         ========================================================================= -->
+    <section id="handler-view" class="view-section">
+
+      <!-- STATE A: Handler Queue & Filters (Default View - Question 2) -->
+      <div class="card" id="handlerQueueCard">
+        <div class="claims-inbox-header">
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700;">תור בדיקת תביעות • רפרנטית רונית לוי</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              ה-AI מסייע, מאמת ומחלץ נתונים אך <strong>אינו מקבל החלטות סופיות</strong>. כל אישור או דחייה מחייבים אישור
+              רפרנט אנושי.
+            </p>
+          </div>
+
+          <div class="filter-pills" id="handlerInboxFilters">
+            <button class="filter-pill active" data-filter="all">כל התביעות בתור (5)</button>
+            <button class="filter-pill" data-filter="Guardian Claim" id="filterBtnGuardian" style="border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8;">
+              <i class="fa-solid fa-scale-balanced"></i> תביעות אפוטרופוס (<span id="guardianFilterCount">1</span>)
+            </button>
+            <button class="filter-pill" data-filter="Under Human Review">בבדיקת רפרנט (2)</button>
+            <button class="filter-pill" data-filter="Waiting for Customer">חסר מסמכים (1)</button>
+            <button class="filter-pill" data-filter="Fast Track">מוכן לאישור מהיר (1)</button>
+            <button class="filter-pill" data-filter="Duplicate Alert">אזהרת כפילות (1)</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="custom-table" id="handlerClaimsTable">
+            <thead>
+              <tr>
+                <th>מזהה תביעה</th>
+                <th>שם המבוטח/ת</th>
+                <th>סוג תביעה</th>
+                <th>סכום נתבע</th>
+                <th>רמת סיכון AI</th>
+                <th>סטטוס</th>
+                <th>ממצאי אימות מקדים</th>
+                <th>פעולה</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STATE B: SPLIT-SCREEN CLAIM INSPECTOR (Visible only when a claim is selected - Question 2) -->
+      <div id="handlerClaimInspector" style="display: none;">
+
+        <div class="card" style="margin-bottom: 1rem; background: #f8fafc; border-right: 5px solid var(--primary);">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.2rem;" id="inspectClaimTitle">בדיקת
+                תביעה: CLM-2026-8810 • ישראל ישראלי</h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;" id="inspectClaimSubtitle">פוליסה:
+                POL-773291-IL | תאריך טיפול: 28/09/2026</p>
+            </div>
+            <button class="btn btn-secondary" onclick="App.closeInspectorAndShowInbox()">
+              <i class="fa-solid fa-arrow-right"></i>
+              חזרה לרשימת כל התביעות בתור
+            </button>
+          </div>
+        </div>
+
+        <div class="split-inspector">
+
+          <!-- LEFT PANEL: Source Document Simulation Viewer with OCR Overlays -->
+          <div class="document-viewer-panel">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+              <span style="font-size: 0.88rem; font-weight: 600;">
+                <i class="fa-solid fa-file-pdf text-danger"></i> מסמכי מקור סרוקים (OCR View):
+              </span>
+              <!-- Dynamic Document Switcher Tabs -->
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="docViewerTabs">
+                <!-- Populated dynamically via JS for all claim documents -->
+              </div>
+            </div>
+
+            <!-- Visual Document Simulation Box -->
+            <div class="doc-canvas-simulation">
+              <div class="doc-mock-preview" id="mockDocContent">
+                <!-- Populated dynamically based on selected document tab -->
+              </div>
+            </div>
+
+            <div
+              style="margin-top: 0.75rem; font-size: 0.78rem; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;"
+              id="inspectDocMeta">
+              <span>דיוק פענוח OCR: <strong id="inspectDocConfidence">96.4%</strong></span>
+              <span>קובץ פעיל: <strong id="inspectDocFileName">חשבונית_אסותא_ספטמבר.pdf</strong></span>
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL: AI Pre-Validation, Checks, Editable Fields & Actions -->
+          <div class="handler-details-panel">
+
+            <!-- Prominent Guardianship Legal Status & Approval Box (בדיקת והחלטת רפרנט) -->
+            <div id="inspectGuardianshipBannerContainer" style="display: none; margin-bottom: 1.15rem;">
+              <div class="variance-callout-banner" id="inspectGuardianshipBox"
+                style="background: #eff6ff; border: 1px solid #bfdbfe; border-right: 5px solid #2563eb; border-radius: var(--radius-md); padding: 1.15rem; box-shadow: var(--shadow-sm);">
+                
+                <!-- Header with Title & Live Status -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                  <div style="display: flex; gap: 0.65rem; align-items: center;">
+                    <i class="fa-solid fa-scale-balanced" style="font-size: 1.45rem; color: #1d4ed8;"></i>
+                    <div>
+                      <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #1e3a8a;">
+                        בדיקת כשרות משפטית וצו אפוטרופסות • החלטת רפרנט
+                      </h4>
+                      <span style="font-size: 0.8rem; color: #2563eb;">תביעה המוגשת מכוח אפוטרופסות / ייפוי כוח מתמשך</span>
+                    </div>
+                  </div>
+                  <div id="inspectGuardianshipStatusBadgeContainer" style="display: flex; gap: 0.4rem; align-items: center;">
+                    <!-- Rendered dynamically by JS -->
+                  </div>
+                </div>
+
+                <!-- Ward & Case Details Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; background: #ffffff; border: 1px solid #dbeafe; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 0.85rem; font-size: 0.85rem;">
+                  <div>
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">שם החסוי/מיוצג (מטופל):</span>
+                    <strong id="inspectWardNameText" style="color: #1e3a8a;">רחל ישראלי</strong> 
+                    <span style="font-size: 0.76rem; color: var(--text-secondary);">(ת.ז. <span id="inspectWardIdText">019283746</span>)</span>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">אפוטרופוס / מיופה כוח מגיש:</span>
+                    <strong id="inspectGuardianNameText" style="color: #1e3a8a;">ישראל ישראלי</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">תיק שיפוטי / אסמכתא:</span>
+                    <strong id="inspectCourtCaseText" style="color: #1d4ed8;">א"פ 42918-03-24</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">היקף סמכויות שאושר עפ"י דין:</span>
+                    <span id="inspectScopeText" style="color: #166534; font-weight: 600;">עניינים רפואיים, ביטוחיים ואישיים</span>
+                  </div>
+                </div>
+
+                <!-- AI Pre-Validation Checklist for Referent -->
+                <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 0.95rem; font-size: 0.82rem; color: #1e3a8a;">
+                  <span style="display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-circle-check text-success"></i> צו שיפוטי זוהה מול מרשם האפוטרופוס הכללי
+                  </span>
+                  <span style="display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-circle-check text-success"></i> זוהתה חתימה דיגיטלית של בית המשפט
+                  </span>
+                  <span style="display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-circle-check text-success"></i> סמכות מלאה לניהול והגשת תביעות ביטוח
+                  </span>
+                </div>
+
+                <!-- Referent Action Buttons & Approval Stamp -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; border-top: 1px dashed #bfdbfe; padding-top: 0.75rem;">
+                  <div id="referentGuardianshipStamp">
+                    <!-- Dynamic Stamp: Approved vs Pending -->
+                  </div>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.75rem; background: #ffffff;"
+                      onclick="App.openGuardianshipProofModal()">
+                      <i class="fa-solid fa-file-pdf text-danger"></i> צפייה בצו המלא
+                    </button>
+                    <button type="button" class="btn btn-warning" id="btnRejectGuardianReferent" style="font-size: 0.8rem; padding: 0.4rem 0.75rem;"
+                      onclick="App.requestGuardianDocUpdate()">
+                      <i class="fa-solid fa-circle-question"></i> בקשת צו עדכני
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnApproveGuardianReferent" style="font-size: 0.8rem; padding: 0.4rem 0.95rem; font-weight: 700;"
+                      onclick="App.approveGuardianshipAsReferent()">
+                      <i class="fa-solid fa-check-double"></i> אשר תוקף אפוטרופסות לתביעה זו
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Highlighted Discrepancy & Customer Explanation Banner (Question 1) -->
+            <div id="inspectVarianceBannerContainer">
+              <!-- Populated if claim has discrepancy/customer note -->
+            </div>
+
+            <!-- Customer Pre-Submission Edits & Value Comparison Dropdown (Dropdown with down arrow, Closed by default) -->
+            <div class="collapsible-card" id="cardCustomerEditsDropdown"
+              style="margin-bottom: 1.25rem; display: none; border: 1px solid #fde68a; box-shadow: var(--shadow-sm);">
+              <div class="collapsible-header" onclick="App.toggleCollapsible('cardCustomerEditsDropdown')"
+                style="display: flex; justify-content: space-between; align-items: center; background: #fffbeb; padding: 0.85rem 1.15rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                  <h4
+                    style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; color: #92400e;">
+                    <i class="fa-solid fa-clock-rotate-left text-warning"></i>
+                    <span>שינויים ועריכות שבוצעו ע"י המבוטח טרם ההגשה</span>
+                  </h4>
+                  <span class="badge badge-warning" id="inspectEditsCountBadge"
+                    style="font-size: 0.75rem; font-weight: 700;">
+                    זוהו שינויים טרום-הגשה
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.78rem; color: #b45309;" id="inspectEditsToggleLabel">השוואת סכום קודם
+                    ועכשווי</span>
+                  <i class="fa-solid fa-chevron-down chevron-icon" style="color: #b45309; font-size: 0.95rem;"></i>
+                </div>
+              </div>
+
+              <div class="collapsible-content" style="padding: 1.1rem; background: #ffffff;">
+                <div id="inspectCustomerEditsList">
+                  <!-- Dynamically populated with comparison cards (ערך קודם vs ערך עכשווי, הסבר המבוטח, חותמת זמן ואאודיט) -->
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Pre-Validation Checks & Explainability Box (Collapsible, Closed by default) -->
+            <div class="collapsible-card" id="cardInspectAiChecks" style="margin-bottom: 1.25rem;">
+              <div class="collapsible-header" onclick="App.toggleCollapsible('cardInspectAiChecks')"
+                style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                  <h4
+                    style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem;">
+                    <i class="fa-solid fa-robot text-primary"></i> בדיקות אימות מקדימות של מנוע ה-AI
+                  </h4>
+                  <span class="badge badge-warning" id="inspectRiskBadge" style="font-size: 0.75rem;">סיכון: בינוני
+                    (0.88)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.78rem; color: var(--text-muted);">לחץ לצפייה בממצאי AI</span>
+                  <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                </div>
+              </div>
+
+              <div class="collapsible-content">
+                <div id="inspectChecksList">
+                  <!-- Populated dynamically -->
+                </div>
+
+                <!-- AI Explainability Banner -->
+                <div
+                  style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-sm); padding: 0.75rem; margin-top: 0.85rem; font-size: 0.84rem;">
+                  <strong style="color: var(--primary-dark);"><i class="fa-solid fa-circle-info"></i> הסבר AI
+                    לניתוב:</strong>
+                  <p id="inspectExplainability" style="margin-top: 0.25rem; color: var(--text-primary);"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Extracted Fields of the Active Document (In Document Order with Confidence Scores) -->
+            <div class="card" style="margin-bottom: 1.25rem;" id="handlerExtractedFieldsCard">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <h4 style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-pen-to-square text-primary"></i>
+                    שדות שחולצו מהמסמך הנבחר (אימות ותיקון ערכים)
+                  </h4>
+                  <span style="font-size: 0.78rem; color: var(--text-secondary);" id="handlerActiveDocName">
+                    קובץ פעיל
+                  </span>
+                </div>
+                <span class="badge badge-primary" style="font-size: 0.76rem;" id="handlerDocFieldsBadge">
+                  <i class="fa-solid fa-robot"></i> מנוע חילוץ שדות AI
+                </span>
+              </div>
+              <div class="form-grid" id="handlerExtractedFieldsGrid">
+                <!-- Dynamically populated per active document tab -->
+              </div>
+            </div>
+
+            <!-- Mandatory Human Review Checklist (PRD Section 15) -->
+            <div class="mandatory-review-box">
+              <strong style="font-size: 0.9rem; display: block; margin-bottom: 0.5rem; color: var(--text-primary);">
+                <i class="fa-solid fa-clipboard-check text-success"></i> רשימת בדיקות חובה לפני החלטה (Human Checklist):
+              </strong>
+              <label class="review-checkbox-item">
+                <input type="checkbox" id="chkReviewId" class="routing-radio">
+                <span>אימתתי את זהות המבוטח והתאמתה למסמכי הטיפול</span>
+              </label>
+              <label class="review-checkbox-item">
+                <input type="checkbox" id="chkReviewProvider" class="routing-radio">
+                <span>אימתתי כי המוסד הרפואי והרופא המטפל שחולצו מהמסמכים הם ברשימת ההסדר</span>
+              </label>
+              <label class="review-checkbox-item">
+                <input type="checkbox" id="chkReviewAmount" class="routing-radio">
+                <span>אימתתי את סכום החשבונית המקורי מול הסכום המבוקש</span>
+              </label>
+              <label class="review-checkbox-item">
+                <input type="checkbox" id="chkReviewPolicy" class="routing-radio">
+                <span>בדקתי את תוקף הפוליסה, אכשרה והיעדר החרגות רפואיות</span>
+              </label>
+            </div>
+
+            <!-- Handler Decision Action Buttons (2-Row Structured Layout) -->
+            <div class="handler-actions-container">
+              <div class="handler-actions-primary-row">
+                <button class="btn btn-success handler-action-btn" id="btnApproveClaim">
+                  <i class="fa-solid fa-check"></i>
+                  <span>אישור תביעה לתשלום</span>
+                </button>
+                <button class="btn btn-danger handler-action-btn" id="btnRejectClaimModal">
+                  <i class="fa-solid fa-ban"></i>
+                  <span>דחיית תביעה (סיבה מובנית)</span>
+                </button>
+              </div>
+
+              <div class="handler-actions-secondary-row">
+                <button class="btn btn-secondary handler-sub-btn" id="btnRequestInfoModal">
+                  <i class="fa-solid fa-envelope-open-text"></i>
+                  <span>בקשת מסמכים חסרים</span>
+                </button>
+                <button class="btn btn-secondary handler-sub-btn" id="btnViewAuditLog">
+                  <i class="fa-solid fa-history"></i>
+                  <span>היסטוריית שינויים (Audit)</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- =========================================================================
+         VIEW 3: CLAIMS DEPARTMENT MANAGER DASHBOARD (Workload & 18 Handlers)
+         ========================================================================= -->
+    <section id="manager-view" class="view-section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700;">ניהול מחלקת תביעות • דן כרמלי (מנהל מחלקה)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              ניטור עומסים בזמן אמת, חלוקת תביעות בין 18 הרפרנטים, מעקב SLA וטיפול באסקילציות.
+            </p>
+          </div>
+          <div class="badge badge-primary">
+            נפח יומי: ~600 מסמכים • 18 רפרנטים פעילים
+          </div>
+        </div>
+
+        <!-- Manager Quick KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-primary">
+              <i class="fa-solid fa-inbox"></i>
+            </div>
+            <div>
+              <div class="kpi-value" id="mgrTotalInQueue">210</div>
+              <div class="kpi-label">תביעות בטיפול פעיל</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <div class="kpi-value" id="mgrEscalationsCount">14</div>
+              <div class="kpi-label">חריגות SLA ואסקילציות</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-success">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <div class="kpi-value">78.4%</div>
+              <div class="kpi-label">שיעור אימות AI מדויק (Clean Pass)</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-secondary">
+              <i class="fa-solid fa-stopwatch"></i>
+            </div>
+            <div>
+              <div class="kpi-value">11.4 דק'</div>
+              <div class="kpi-label">זמן ממוצע לטיפול ידני ברפרנט</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 18 Claims Handlers Workload Grid -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <h3 style="font-weight: 700; margin: 0;">צוות 18 רפרנטי התביעות (חלוקת עומסים ושיבוץ):</h3>
+          <button class="btn btn-primary" onclick="App.autoBalanceAllHandlers()">
+            <i class="fa-solid fa-scale-balanced"></i> איזון עומסים אוטומטי (כלל המחלקה)
+          </button>
+        </div>
+        <div class="handlers-grid" id="handlersWorkloadGrid">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Manager Guardianship Oversight & Compliance Tracker -->
+        <div class="card" style="margin-top: 1.75rem; border: 1px solid #bfdbfe; background: #ffffff; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; padding: 1.15rem 1.4rem; background: #eff6ff; border-bottom: 1px solid #dbeafe;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <i class="fa-solid fa-scale-balanced" style="font-size: 1.35rem; color: #1d4ed8;"></i>
+              <div>
+                <h3 style="margin: 0; font-size: 1.12rem; font-weight: 700; color: #1e3a8a;">
+                  מעקב ופיקוח מחלקתי: תביעות אפוטרופסות ומיוצגים חוקיים
+                </h3>
+                <span style="font-size: 0.82rem; color: #2563eb;">
+                  בקרה שיפוטית, תוקף צווי מינוי ועמידה בנהלי חוק הכשרות המשפטית והאפוטרופסות
+                </span>
+              </div>
+            </div>
+            <span class="badge badge-primary" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+              <i class="fa-solid fa-shield-halved"></i> בקרה שוטפת • דן כרמלי (מנהל מחלקה)
+            </span>
+          </div>
+
+          <div style="padding: 1.25rem;">
+            <!-- Manager Guardianship KPIs -->
+            <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.25rem;">
+              <div class="kpi-card" style="background: #f8fafc;">
+                <div class="kpi-icon-box kpi-icon-primary">
+                  <i class="fa-solid fa-users-viewfinder"></i>
+                </div>
+                <div>
+                  <div class="kpi-value" id="mgrGuardianTotalCount">1</div>
+                  <div class="kpi-label">תביעות אפוטרופוס סה"כ</div>
+                </div>
+              </div>
+              <div class="kpi-card" style="background: #f8fafc;">
+                <div class="kpi-icon-box kpi-icon-success">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <div class="kpi-value" id="mgrGuardianApprovedCount">0</div>
+                  <div class="kpi-label">אושרו ע"י רפרנטים</div>
+                </div>
+              </div>
+              <div class="kpi-card" style="background: #f8fafc;">
+                <div class="kpi-icon-box kpi-icon-warning">
+                  <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div>
+                  <div class="kpi-value" id="mgrGuardianPendingCount">1</div>
+                  <div class="kpi-label">ממתינות לבדיקת רפרנט</div>
+                </div>
+              </div>
+              <div class="kpi-card" style="background: #f8fafc;">
+                <div class="kpi-icon-box kpi-icon-secondary">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <div class="kpi-value">100%</div>
+                  <div class="kpi-label">תאימות צווי בימ"ש</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Manager Guardianship Oversight Table -->
+            <div class="table-container">
+              <table class="custom-table" id="managerGuardianshipTable">
+                <thead>
+                  <tr>
+                    <th>מספר תביעה</th>
+                    <th>אפוטרופוס מגיש</th>
+                    <th>שם החסוי/מיוצג</th>
+                    <th>תיק שיפוטי / אסמכתא</th>
+                    <th>סכום נתבע</th>
+                    <th>רפרנט מטפל</th>
+                    <th>סטטוס אישור משפטי</th>
+                    <th>פעולות מנהל</th>
+                  </tr>
+                </thead>
+                <tbody id="managerGuardianshipTableBody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 4: COMPANY MANAGEMENT DASHBOARD (Aggregated Operational KPIs)
+         ========================================================================= -->
+    <section id="exec-view" class="view-section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700;">דשבורד הנהלה ראשית • מיכל ברקוביץ' (סמנכ"לית תפעול)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              תמונת מצב אגרגטיבית ומדדי הצלחה (KPIs) — ללא חשיפת מידע רפואי רגיש לשמירה על פרטיות.
+            </p>
+          </div>
+          <div class="badge badge-success">
+            יעדי ROI: חיסכון של 40-50% בזמן מנהלי
+          </div>
+        </div>
+
+        <!-- Top Executive Metrics -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-primary">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+              <div class="kpi-value">1,420</div>
+              <div class="kpi-label">סך תביעות שטופלו החודש</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-success">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <div class="kpi-value">42%</div>
+              <div class="kpi-label">צמצום זמן עבודה אדמיניסטרטיבית</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-warning">
+              <i class="fa-solid fa-eye"></i>
+            </div>
+            <div>
+              <div class="kpi-value">94.6%</div>
+              <div class="kpi-label">דיוק חילוץ OCR ומנוע AI</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box kpi-icon-secondary">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div>
+              <div class="kpi-value">4.8 שעות</div>
+              <div class="kpi-label">זמן סבב ממוצע מקצה לקצה</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Business Breakdown Analytics (Collapsible with Down Arrow, Closed by Default) -->
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+
+          <div class="collapsible-card" id="cardExecStatusBreakdown">
+            <div class="collapsible-header" onclick="App.toggleCollapsible('cardExecStatusBreakdown')">
+              <h4
+                style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;">
+                <i class="fa-solid fa-list-check text-primary"></i> התפלגות סטטוס תביעות פעילות
+              </h4>
+              <i class="fa-solid fa-chevron-down chevron-icon"></i>
+            </div>
+            <div class="collapsible-content">
+              <div style="display: flex; flex-direction: column; gap: 0.85rem;" id="execStatusBreakdown">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsible-card" id="cardExecRejectionBreakdown">
+            <div class="collapsible-header" onclick="App.toggleCollapsible('cardExecRejectionBreakdown')">
+              <h4
+                style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;">
+                <i class="fa-solid fa-chart-pie text-danger"></i> התפלגות סיבות דחייה מובנות
+              </h4>
+              <i class="fa-solid fa-chevron-down chevron-icon"></i>
+            </div>
+            <div class="collapsible-content">
+              <div style="display: flex; flex-direction: column; gap: 0.85rem;" id="execRejectionBreakdown">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 0. Category Required Documents Modal (Pre-Claim Requirement Confirmation) -->
+  <div class="modal-backdrop" id="modalCategoryRequiredDocs">
+    <div class="modal-window" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-file-medical text-primary" id="catModalIcon"></i>
+          <span>מסמכים נדרשים לתביעת: <strong id="catModalTitle">ניתוח ואשפוז בארץ</strong></span>
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalCategoryRequiredDocs')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div
+        style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+        <p style="font-size: 0.88rem; color: #1e3a8a; margin: 0; line-height: 1.45;">
+          <i class="fa-solid fa-circle-info text-primary"></i>
+          <strong>לפני תחילת מילוי הבקשה:</strong>
+          כדי לאפשר אימות מהיר וטיפול רציף ללא עיכובים, אנא ודא כי המסמכים והטפסים הבאים ברשותך לצורך הגשת התביעה:
+        </p>
+      </div>
+
+      <div id="catModalDocsList"
+        style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; overflow: visible; padding-left: 4px;">
+        <!-- Populated dynamically via JavaScript with document item cards, badges, and practical tips -->
+      </div>
+
+      <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        * העלאת המסמכים תתבצע בשלב 3 באמצעות סריקת PDF או תמונות מהנייד (עם אימות OCR מהיר).
+      </p>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalCategoryRequiredDocs')">
+          בחירת סוג טיפול אחר
+        </button>
+        <button class="btn btn-primary" id="btnConfirmCategoryModal" onclick="App.confirmCategoryModal()">
+          <span>הבנתי, יש לי את המסמכים - המשך במילוי</span>
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 0b. Intelligent Pre-Validation Hard Blocker Modal (Preventing Invalid Submissions) -->
+  <div class="modal-backdrop" id="modalPreValidationBlocker">
+    <div class="modal-window" style="max-width: 600px; border-top: 6px solid var(--danger);">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: var(--danger-dark); display: flex; align-items: center; gap: 0.6rem;">
+          <i class="fa-solid fa-shield-halved" id="blockerModalIcon" style="color: var(--danger);"></i>
+          <span id="blockerModalTitle">הודעת מערכת: לא ניתן להגיש את הבקשה</span>
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalPreValidationBlocker')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Polite Explanation Paragraph -->
+      <div
+        style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 1rem 1.15rem; margin-bottom: 1.25rem;">
+        <strong style="color: #991b1b; font-size: 0.92rem; display: block; margin-bottom: 0.35rem;"
+          id="blockerReasonBadge">
+          <i class="fa-solid fa-circle-xmark"></i> זיהוי חסימת אימות מקדים
+        </strong>
+        <p id="blockerMessageText" style="font-size: 0.9rem; color: #1e293b; line-height: 1.55; margin: 0;">
+          זוהתה סיבת חסימה המונעת את הגשת התביעה במתכונתה הנוכחית.
+        </p>
+      </div>
+
+      <!-- Suggested 1-Sentence Solution Card -->
+      <div id="blockerSolutionContainer"
+        style="background: #f0fdf4; border: 1.5px solid #86efac; border-right: 4px solid var(--success); border-radius: var(--radius-sm); padding: 1rem 1.15rem; margin-bottom: 1.5rem;">
+        <strong
+          style="color: #166534; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+          <i class="fa-solid fa-lightbulb text-warning"></i> פתרון מוצע:
+        </strong>
+        <p id="blockerSolutionText"
+          style="font-size: 0.9rem; color: #14532d; line-height: 1.5; margin: 0; font-weight: 500;">
+          באפשרותך לעקוב אחר סטטוס התביעה הקיימת באזור האישי שלך.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalPreValidationBlocker')">
+          חזרה לעריכת פרטים
+        </button>
+        <button class="btn btn-primary" id="btnBlockerPrimaryAction" onclick="App.handleBlockerAction()">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>מעבר לצפייה בתביעות שלי</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 0c. Low Document Confidence / Clarity Modal (OCR 50-85% Guidance) -->
+  <div class="modal-backdrop" id="modalLowConfidenceDoc">
+    <div class="modal-window" style="max-width: 620px; border-top: 6px solid var(--warning);">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 0.6rem;">
+          <i class="fa-solid fa-file-circle-exclamation text-warning"></i>
+          <span>אימות איכות מסמך • ציון קריאות: <strong id="lowConfScoreBadge"
+              style="color: #d97706;">68%</strong></span>
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalLowConfidenceDoc')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div
+        style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 1rem 1.15rem; margin-bottom: 1.25rem;">
+        <p style="font-size: 0.9rem; color: #78350f; line-height: 1.55; margin: 0;">
+          <i class="fa-solid fa-circle-info text-warning"></i>
+          מנוע ה-AI זיהה כי איכות הסריקה, החדות או התאורה של המסמך שהועלה <strong>אינן ברורות דיין (68%
+            ביטחון)</strong>. כדי למנוע עיכובים בטיפול ודרישות להשלמות בהמשך, מומלץ להעלות עותק ברור יותר.
+        </p>
+      </div>
+
+      <div
+        style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.9rem; margin-bottom: 1.5rem;">
+        <strong style="font-size: 0.88rem; display: block; margin-bottom: 0.5rem; color: var(--text-primary);">
+          כיצד ברצונך להמשיך?
+        </strong>
+        <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5;">
+          • <strong>העלאת מסמך ברור:</strong> צילום חוזר באור יום או סריקת PDF באיכות גבוהה תאפשר אימות מיידי מהיר.<br>
+          • <strong>העברה לבדיקת רפרנט:</strong> אם אין ברשותך עותק נוסף, התביעה תועבר לבדיקה ידנית של רפרנט אנושי.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="App.proceedWithLowConfidenceDoc()">
+          <i class="fa-solid fa-user-clock"></i>
+          אין ברשותי עותק ברור יותר (העבר לנציג)
+        </button>
+        <button class="btn btn-primary" onclick="App.reuploadClearDoc()">
+          <i class="fa-solid fa-camera"></i>
+          העלאת צילום ברור יותר (מומלץ)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- High / Exceptional Amount Warning Modal (התראת סכום חריג והמלצה לאסמכתת תשלום) -->
+  <div class="modal-backdrop" id="modalHighAmountWarning">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #b45309;">
+          <i class="fa-solid fa-triangle-exclamation text-warning" style="font-size: 1.25rem;"></i>
+          התראה: סכום תביעה חריג לסוג הטיפול
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalHighAmountWarning')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div
+        style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+          <span style="font-size: 0.95rem; font-weight: 700; color: #92400e;" id="highAmountCategoryTitle">
+            סוג הטיפול: ייעוץ מומחה
+          </span>
+          <span class="badge badge-warning" style="font-weight: 700; font-size: 0.85rem;" id="highAmountValueBadge">
+            סכום מוזן: ₪2,500
+          </span>
+        </div>
+        <p style="font-size: 0.88rem; color: #78350f; line-height: 1.55; margin: 0;" id="highAmountExplanation">
+          הסכום שהוזן גבוה מהטווח המקובל לסוג טיפול זה (סף מומלץ: מעל ₪2,000).
+        </p>
+      </div>
+
+      <div
+        style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-sm); padding: 1rem 1.15rem; margin-bottom: 1.5rem;">
+        <strong
+          style="font-size: 0.9rem; color: #0369a1; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem;">
+          <i class="fa-solid fa-lightbulb"></i> המלצה לזירוז אישור התביעה:
+        </strong>
+        <p style="font-size: 0.85rem; color: #0c4a6e; line-height: 1.5; margin: 0;">
+          כדי לאמת שההוצאה שולמה בפועל ולמנוע עיכובים בבדיקת הרפרנט, <strong>אנו ממליצים לצרף אסמכתת תשלום</strong>
+          (אישור חיוב אשראי, קבלה על תשלום או אישור העברה בנקאית) בשלב העלאת המסמכים.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="App.acknowledgeHighAmount(false)">
+          המשך עם הסכום שהזנתי
+        </button>
+        <button class="btn btn-primary" onclick="App.acknowledgeHighAmount(true)">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          הבנתי, אצרף אסמכתת תשלום בשלב הבא
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Soft Variance Side-by-Side Delta Comparison Modal (UX Rule #3) -->
+  <div class="modal-backdrop" id="modalSoftVariance">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-scale-unbalanced text-warning"></i>
+          השוואת אי-התאמה בנתונים (Soft Variance)
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalSoftVariance')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--text-secondary);">
+        זוהה הבדל בין הסכום שהזנת בטופס לבין הסכום שפוענח בחשבונית הסרוקה. באפשרותך לסנכרן בלחיצה אחת או להשאיר הערה
+        לרפרנט.
+      </p>
+
+      <div class="side-by-side-comparison">
+        <div class="comparison-col">
+          <small style="color: var(--text-secondary);">מה שהזנת בטופס:</small>
+          <div class="comparison-value" id="varianceFormValue">₪18,500</div>
+          <span class="badge badge-neutral">סכום מוצהר</span>
+        </div>
+
+        <div class="comparison-col ocr">
+          <small style="color: var(--primary-dark);">מה שפוענח בחשבונית (OCR):</small>
+          <div class="comparison-value" id="varianceOcrValue" style="color: var(--primary);">₪16,800</div>
+          <span class="badge badge-primary">קובץ: חשבונית_אסותא.pdf</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label">הסבר חופשי לרפרנט (אופציונלי):</label>
+        <input type="text" class="form-input" id="varianceNoteInput"
+          placeholder="לדוגמה: ההפרש של ₪1,700 שולם ישירות לחברת השתלים">
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalSoftVariance')">
+          המשך עם הסכום שהזנתי
+        </button>
+        <button class="btn btn-primary" id="btnOneClickSync">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          עדכון בטופס לפי המסמך (₪16,800)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Structured Rejection Reason Modal (PRD Section 17) -->
+  <div class="modal-backdrop" id="modalRejection">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: var(--danger-dark); display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-ban"></i>
+          דחיית תביעה - בחירת סיבה מובנית
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalRejection')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        על פי נהלי אופק בריאות והרגולציה, כל דחיית תביעה מחייבת סיבה מובנית שתתועד בתיק המבוטח ותישלח במכתב רשמי.
+      </p>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label">בחר עילת דחייה מוגדרת *</label>
+        <select class="form-select" id="rejectionReasonSelect" required>
+          <option value="" disabled selected>בחר סיבת דחייה מוגדרת מתוך הרשימה...</option>
+          <option value="REJ-01">REJ-01: טיפול שבוצע לפני מועד תחילת הביטוח (תוקף פוליסה)</option>
+          <option value="REJ-02">REJ-02: תקופת אכשרה טרם הסתיימה (אכשרה)</option>
+          <option value="REJ-03">REJ-03: הטיפול / השירות מוחרג בפוליסה (כיסוי והחרגות)</option>
+          <option value="REJ-04">REJ-04: היעדר מסמכים רפואיים חיוניים חרף תזכורות (מסמכים)</option>
+          <option value="REJ-05">REJ-05: אי-התאמה מהותית בין המסמכים לתביעה (אימות נתונים)</option>
+          <option value="REJ-06">REJ-06: תביעה כפולה - הוצאה שכבר שולמה/נתבעה בעבר (כפילות)</option>
+          <option value="REJ-07">REJ-07: ספק/רופא שאינו עומד בתנאי ההסכם או רישוי מוכר (ספק שירות)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label">נימוק מפורט למבוטח ולתיק התביעה *</label>
+        <textarea class="form-textarea" id="rejectionDetailText" rows="3"
+          placeholder="פרט את הנימוק בהתאם לסעיפי הפוליסה..." required></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalRejection')">ביטול</button>
+        <button class="btn btn-danger" id="btnConfirmRejection">
+          <i class="fa-solid fa-check"></i>
+          אישור דחייה ושליחת הודעה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Missing Information Request Modal (PRD Section 21) -->
+  <div class="modal-backdrop" id="modalRequestInfo">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-envelope-open-text text-primary"></i>
+          בקשת מסמכים ומידע חסר מהמבוטח
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalRequestInfo')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        הודעה זו תשלח למבוטח ב-SMS ובאימייל עם קישור ישיר להעלאת המסמך החסר:
+      </p>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label">מסמך חסר שנדרש להשלמה:</label>
+        <input type="text" class="form-input" id="missingDocNameInput" value="דו&quot;ח ניתוח חתום ע&quot;י המנתח">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label">הסבר והנחיות למבוטח מדוע המסמך נדרש:</label>
+        <textarea class="form-textarea" id="missingDocExplanation"
+          rows="3">שלום ישראל, לצורך השלמת הטיפול בתביעת הניתוח באסותא, אנא העלה את דו"ח הניתוח הרשמי שנמסר לך בעת השחרור.</textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalRequestInfo')">ביטול</button>
+        <button class="btn btn-primary" id="btnConfirmRequestInfo">
+          <i class="fa-solid fa-paper-plane"></i>
+          שליחת בקשה למבוטח
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3b. Customer Complete Missing Document Modal (Customer Portal Facing) -->
+  <div class="modal-backdrop" id="modalCustomerUploadDoc">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--primary-dark);">
+          <i class="fa-solid fa-cloud-arrow-up text-primary"></i>
+          השלמת מסמכים לתביעה • <span id="custUploadClaimId">CLM-2026-8813</span>
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalCustomerUploadDoc')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div
+        style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+        <strong style="font-size: 0.88rem; color: #1e40af; display: flex; align-items: center; gap: 0.4rem;">
+          <i class="fa-solid fa-circle-info"></i> הודעה מרפרנטית התביעות:
+        </strong>
+        <p id="custUploadExplanation" style="font-size: 0.84rem; color: var(--text-primary); margin-top: 0.35rem;">
+          שלום, לצורך השלמת הטיפול בתביעה נדרש צירוף צילומי רנטגן ותוכנית טיפול עדכנית חתומה.
+        </p>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label">המסמך הנדרש להשלמה:</label>
+        <div style="font-weight: 700; font-size: 0.95rem;" id="custUploadDocName">
+          צילומי רנטגן ותוכנית טיפול
+        </div>
+      </div>
+
+      <!-- Upload Drop Zone for Customer -->
+      <div class="drop-zone" id="custModalDropZone" onclick="App.simulateCustomerModalFileUpload()"
+        style="margin-bottom: 1rem;">
+        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary);"></i>
+        <div style="font-weight: 700; font-size: 0.95rem; margin: 0.3rem 0;" id="custModalDropZoneTitle">
+          לחץ כאן לבחירת קובץ או גרור לכאן
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted);">
+          נתמכים קבצי PDF, JPG, PNG עד 15MB
+        </div>
+      </div>
+
+      <!-- Live Preview & Instant AI Verification Box -->
+      <div id="custModalFilePreview"
+        style="display: none; background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span><i class="fa-solid fa-file-circle-check text-success"></i> <strong
+              id="custModalUploadedFileName">מסמך_השלמה_מאומת.pdf</strong> (1.4MB)</span>
+          <span class="badge badge-success">אימות AI עבר בהצלחה</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="App.closeModal('modalCustomerUploadDoc')">ביטול</button>
+        <button class="btn btn-primary" id="btnSubmitCustomerDoc" onclick="App.handleCustomerDocSubmit()">
+          <i class="fa-solid fa-paper-plane"></i>
+          שליחת המסמך והמשך טיפול בתביעה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. OCR Discrepancy & Required Explanation Box Modal (On-the-spot edit verification) -->
+  <div class="modal-backdrop" id="modalEditDiscrepancyExplanation">
+    <div class="modal-window" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #92400e;">
+          <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+          זוהתה אי-התאמה מול סריקת המסמכים (OCR)
+        </h3>
+        <button class="btn-close-modal" onclick="App.cancelDiscrepancyEdit()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div
+        style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.15rem;">
+        <p style="font-size: 0.86rem; color: #78350f; margin: 0; line-height: 1.45;">
+          הפרטים שעדכנת אינם תואמים לנתונים שפוענחו בסריקת המסמכים הרפואיים (OCR). על מנת למנוע עיכוב בטיפול התביעה
+          ולהבטיח בדיקה מהירה, <strong>נא לציין הסבר מנומק עבור הרפרנט הבודק</strong>.
+        </p>
+      </div>
+
+      <!-- Discrepant Items Comparison Container -->
+      <div id="discrepancyItemsList"
+        style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.15rem;">
+        <!-- Populated via JS (field name, scanned value, user entered value, delta) -->
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label"
+          style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.35rem;">
+          <i class="fa-solid fa-comment-dots text-primary"></i>
+          הסבר ונימוק לרפרנט לבדיקת השינוי *
+        </label>
+        <textarea class="form-input" id="discrepancyExplanationInput" rows="3"
+          placeholder="נא להסביר את סיבת השינוי (לדוגמה: שולם תשלום נוסף בנפרד עבור שתלים / הקבלה כוללת מקדמה שלא מופיעה בחשבונית...)"
+          style="resize: vertical; font-size: 0.88rem;" required></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="App.cancelDiscrepancyEdit()">
+          ביטול וחזרה לערך שנסרק
+        </button>
+        <button type="button" class="btn btn-primary" onclick="App.confirmDiscrepancyExplanation()">
+          <i class="fa-solid fa-check"></i>
+          אישור ושמירה עם ההסבר
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Audit Trail Modal (PRD Section 24) -->
+  <div class="modal-backdrop" id="modalAuditTrail">
+    <div class="modal-window" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+          יומן מעקב וביקורת מלא (Audit Trail)
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalAuditTrail')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="auditTrailList"
+        style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 60vh; overflow-y: auto;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Guardianship Setup & Intelligent Extraction Modal (Israeli Law Compliance) -->
+  <div class="modal-backdrop" id="modalGuardianshipSetup">
+    <div class="modal-window" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #1e3a8a;">
+          <i class="fa-solid fa-scale-balanced text-primary"></i>
+          העלאת אישור אפוטרופסות וייפוי כוח
+        </h3>
+        <button class="btn-close-modal" onclick="App.closeModal('modalGuardianshipSetup')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Concise & Clear Required Documents Box (Requirement 2) -->
+      <div
+        style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 1rem 1.15rem; margin-bottom: 1.15rem;">
+        <h4
+          style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.45rem; color: #1e40af; display: flex; align-items: center; gap: 0.4rem;">
+          <i class="fa-solid fa-file-circle-check"></i> איזה מסמך נדרש להעלות?
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem; color: #1e3a8a;">
+          <div style="display: flex; align-items: flex-start; gap: 0.45rem;">
+            <i class="fa-solid fa-circle-check text-primary" style="margin-top: 0.2rem;"></i>
+            <span><strong>צו מינוי אפוטרופוס מבית המשפט לענייני משפחה</strong> (או אישור הפקדת ייפוי כוח מתמשך בתוקף
+              מהאפוטרופוס הכללי).</span>
+          </div>
+        </div>
+        <div
+          style="font-size: 0.8rem; color: #2563eb; margin-top: 0.55rem; border-top: 1px dashed #bfdbfe; padding-top: 0.4rem;">
+          💡 המערכת תחלץ אוטומטית מתוך הצו את פרטי המיוצג/ת (שם ות.ז.) ומספר התיק, ותציג אותם לאישורך. אין צורך בהעלאת
+          תעודת זהות.
+        </div>
+      </div>
+
+      <!-- Upload Drop Zone (Step 1 of Modal) -->
+      <div id="guardModalDropZone" class="drop-zone" onclick="App.simulateGuardianshipDocUpload()"
+        style="padding: 1.6rem; text-align: center; border: 2px dashed #93c5fd; background: #ffffff; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 1.15rem; transition: all 0.2s;">
+        <i class="fa-solid fa-cloud-arrow-up text-primary" style="font-size: 2.2rem; margin-bottom: 0.4rem;"></i>
+        <div style="font-weight: 700; font-size: 0.98rem; color: var(--text-primary);">
+          לחץ כאן לבחירת קובץ הצו השיפוטי / ייפוי הכוח המתמשך (או גרור לכאן)
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+          קובץ PDF חתום דיגיטלית, סריקת בית משפט או תמונה ברורה (עד 15MB)
+        </div>
+      </div>
+
+      <!-- Extraction in progress state (Loading spinner) -->
+      <div id="guardModalScanningState"
+        style="display: none; text-align: center; padding: 1.75rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); margin-bottom: 1.15rem;">
+        <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size: 2.2rem; margin-bottom: 0.6rem;"></i>
+        <div style="font-weight: 700; font-size: 0.96rem; color: var(--text-primary);">
+          סורק ומחלץ נתונים מתוך צו בית המשפט באמצעות OCR...
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+          זיהוי חותמת שיפוטית, תעודת זהות חסוי/ת, ומספר תיק בימ"ש
+        </div>
+      </div>
+
+      <!-- Extracted data review (Waiting for user confirmation) -->
+      <div id="guardModalExtractedState" style="display: none; margin-bottom: 1.15rem;">
+        <div
+          style="background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div
+            style="display: flex; align-items: center; gap: 0.5rem; color: #166534; font-weight: 700; font-size: 0.9rem;">
+            <i class="fa-solid fa-circle-check"></i> הנתונים חולצו בהצלחה מהצו • ממתין לאישורך:
+          </div>
+          <span class="badge badge-success" style="font-size: 0.76rem;">חולצו 4 שדות • זוהתה חתימה דיגיטלית</span>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 700;">שם החסוי/מיוצג שחולץ *</label>
+            <input type="text" class="form-input" id="guardModalWardName" value="רחל ישראלי" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 700;">תעודת זהות שחולצה *</label>
+            <input type="text" class="form-input input-num-ergonomic" id="guardModalWardId" value="019283746"
+              maxlength="9" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 700;">מספר תיק שיפוטי שחולץ *</label>
+            <input type="text" class="form-input" id="guardModalCaseNum" value='א"פ 42918-03-24' required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 700;">סוג האסמכתא המשפטית</label>
+            <input type="text" class="form-input" id="guardModalDocTypeDisplay"
+              value="צו מינוי אפוטרופוס מבית המשפט לענייני משפחה" readonly
+              style="background: #f8fafc; font-weight: 600;">
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" style="font-weight: 700;">תחום סמכות המינוי המאושר עפ"י דין</label>
+            <input type="text" class="form-input" id="guardModalScope"
+              value="עניינים רפואיים, ביטוחיים, אישיים ורכושיים (סעיפים 33/67יג לחוק)" readonly
+              style="background: #f8fafc; font-weight: 600; color: #166534;">
+          </div>
+        </div>
+
+        <!-- File uploaded summary bar -->
+        <div
+          style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem;">
+            <i class="fa-solid fa-file-pdf text-danger" style="font-size: 1.2rem;"></i>
+            <span id="guardModalUploadedFileName"
+              style="font-weight: 600;">צו_מינוי_אפוטרופוס_בימש_משפחה_חתום.pdf</span>
+            <span class="badge badge-success" style="font-size: 0.72rem;">1.4 MB • נבדק</span>
+          </div>
+          <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;"
+            onclick="App.resetGuardModalUpload()">
+            החלף קובץ
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-secondary" onclick="App.simulateGuardianshipDocUpload()">
+          <i class="fa-solid fa-file-arrow-up"></i> טעינת צו לדוגמה
+        </button>
+        <div style="display: flex; gap: 0.6rem;">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modalGuardianshipSetup')">
+            ביטול
+          </button>
+          <button type="button" class="btn btn-primary" id="btnSubmitGuardianshipApproval"
+            onclick="App.simulateGuardianshipApproval()" disabled style="opacity: 0.5; box-shadow: var(--shadow-md);">
+            <i class="fa-solid fa-circle-check"></i> מאשר/ת את צו האפוטרופסות
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Guardianship Formal Proof & Court Certificate Modal (רפרנט & מבוטח) -->
+  <div class="modal-backdrop" id="modalGuardianshipProof">
+    <div class="modal-window" style="max-width: 760px; background: #ffffff;">
+      <div class="modal-header" style="border-bottom: 2px solid #1e3a8a;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div
+            style="background: #1e3a8a; color: #ffffff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <div>
+            <h3 style="font-weight: 800; font-size: 1.1rem; color: #1e3a8a; margin: 0;">
+              אישור כשרות משפטית וצו אפוטרופסות מאושר
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--text-secondary);">
+              מאושר עפ"י חוק הכשרות המשפטית והאפוטרופסות, תשכ"ב-1962 • מרשם האפוטרופוס הכללי
+            </span>
+          </div>
+        </div>
+        <button class="btn-close-modal" onclick="App.closeModal('modalGuardianshipProof')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Formal Certificate Container -->
+      <div
+        style="border: 1px solid #cbd5e1; border-radius: var(--radius-sm); padding: 1.4rem; background: #fafafa; position: relative; margin-bottom: 1.25rem;">
+
+        <!-- Watermark / Stamp Badge -->
+        <div
+          style="position: absolute; top: 1.25rem; left: 1.25rem; border: 2px solid #16a34a; border-radius: var(--radius-sm); padding: 0.45rem 0.85rem; color: #16a34a; font-weight: 800; font-size: 0.85rem; transform: rotate(-5deg); background: rgba(240, 253, 244, 0.9);">
+          <i class="fa-solid fa-seal-exclamation"></i> מאושר במערכת דיגיטלית
+        </div>
+
+        <div
+          style="text-align: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+          <h4 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 0.3rem;">
+            מדינת ישראל • הנהלת בתי המשפט / משרד המשפטים
+          </h4>
+          <span style="font-size: 0.9rem; color: #475569; font-weight: 600;">
+            בית המשפט לענייני משפחה - מחוז תל אביב
+          </span>
+          <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.2rem;">
+            תיק מספר: <strong id="proofCaseNumber" style="color: #0f172a;">א"פ 42918-03-24</strong>
+          </div>
+        </div>
+
+        <!-- Legal Summary Grid -->
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; font-size: 0.88rem; margin-bottom: 1.25rem;">
+          <div
+            style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+            <div style="color: var(--text-muted); font-size: 0.78rem;">שם האפוטרופוס / מיופה הכוח:</div>
+            <strong style="color: #0f172a; font-size: 0.98rem;" id="proofGuardianName">ישראל ישראלי</strong>
+            <div style="font-size: 0.8rem; color: #475569;">ת.ז. <span id="proofGuardianId">028475913</span> (בעל
+              הפוליסה)</div>
+          </div>
+
+          <div
+            style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+            <div style="color: var(--text-muted); font-size: 0.78rem;">שם החסוי/ה / המיוצג/ת:</div>
+            <strong style="color: #0f172a; font-size: 0.98rem;" id="proofWardName">רחל ישראלי</strong>
+            <div style="font-size: 0.8rem; color: #475569;">ת.ז. <span id="proofWardId">019283746</span></div>
+          </div>
+
+          <div
+            style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+            <div style="color: var(--text-muted); font-size: 0.78rem;">סמכות חוקית ומעמד:</div>
+            <strong style="color: #166534;">אפוטרופוס בלעדי לעניינים רפואיים ואישיים</strong>
+            <div style="font-size: 0.8rem; color: #475569;">מורשה לייצג מול חברות ביטוח וגורמים רפואיים</div>
+          </div>
+
+          <div
+            style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #e2e8f0;">
+            <div style="color: var(--text-muted); font-size: 0.78rem;">תוקף הצו ואימות:</div>
+            <strong style="color: #1e40af;"><i class="fa-solid fa-shield-check text-success"></i> בתוקף (ללא הגבלת
+              מועד)</strong>
+            <div style="font-size: 0.8rem; color: #475569;">אומת דיגיטלית מול מרשם האפוטרופוס הכללי</div>
+          </div>
+        </div>
+
+        <!-- Verified Legal Declarations -->
+        <div
+          style="background: #ffffff; border-right: 3px solid #0284c7; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-size: 0.84rem; color: #334155;">
+          <strong>תמצית הצו והסמכויות:</strong> בהתאם לסעיף 33 וסעיף 67יג לחוק הכשרות המשפטית והאפוטרופסות, מוסמך
+          האפוטרופוס לפעול, לחתום, להגיש תביעות לקבלת החזרים כספיים מחברות ביטוח, לנהל חשבונות וזכויות רפואיות עבור
+          החסוי/מיוצג במלוא תוקפן המשפטי.
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          <i class="fa-solid fa-fingerprint"></i> חתימת אימות דיגיטלית: <strong>SHA-256 Verified (MoJ-Gov-IL)</strong>
+        </span>
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modalGuardianshipProof')">
+          סגירה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="mock-data.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+</body>
+
+</html>
